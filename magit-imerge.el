@@ -61,6 +61,18 @@
 (require 'magit)
 (require 'json)
 
+;;; Options
+
+(defgroup magit-imerge nil
+  "Magit extension for git-imerge"
+  :prefix "magit-imerge"
+  :group 'magit-extensions)
+
+(defface magit-imerge-overriding-value
+  '((t (:inherit font-lock-warning-face)))
+  "Face used in status buffer for an overriding state option."
+  :group 'magit-imerge)
+
 ;;; Utilities
 
 (defun magit-imerge-names ()
@@ -228,7 +240,8 @@ It can be resumed with `magit-imerge-resume'."
 (defun magit-imerge-set-finish-arguments (args)
   "Store ARGS for the next `git imerge finish' call."
   (interactive (list (magit-imerge-finish-arguments)))
-  (setq magit-imerge-finish-arguments args))
+  (setq magit-imerge-finish-arguments args)
+  (magit-refresh))
 
 (defun magit-imerge-finish (&optional args)
   "Finish the current incremental merge.
@@ -272,16 +285,31 @@ plan to return to this incremental merge later."
   (when (magit-imerge-in-progress-p)
     (let* ((name (or (magit-imerge-current-name)
                      (error "No name, but in progress?")))
-           (state (magit-imerge-state name)))
+           (state (magit-imerge-state name))
+           (finish-value
+            (lambda (option)
+              (--some
+               (and (string-match (format "\\`%s=\\(.+\\)"
+                                          (regexp-quote option))
+                                  it)
+                    (match-string 1 it))
+               magit-imerge-finish-arguments))))
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge:")
         (insert (format "Merge name: %s\n" name))
         (insert (format "Tips: %s, %s\n"
                         (cdr (assq 'tip1 state))
                         (cdr (assq 'tip2 state))))
-        (insert (format "Goal: %s\n" (cdr (assq 'goal state))))
+        (insert (format "Goal: %s\n"
+                        (or (--when-let (funcall finish-value "--goal")
+                              (propertize
+                               it 'face 'magit-imerge-overriding-value))
+                            (cdr (assq 'goal state)))))
         (insert (format "Final branch: %s\n\n"
-                        (cdr (assq 'branch state))))
+                        (or (--when-let (funcall finish-value "--branch")
+                              (propertize
+                               it 'face 'magit-imerge-overriding-value))
+                            (cdr (assq 'branch state)))))
         (insert
          (with-temp-buffer
            (magit-git-insert "imerge" "diagram" "--no-color" "--commits")

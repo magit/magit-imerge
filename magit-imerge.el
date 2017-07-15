@@ -3,7 +3,7 @@
 ;; Copyright (C) 2017  Kyle Meyer
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
-;; URL: https://github.com/kyleam/magit-imerge
+;; URL: https://github.com/magit/magit-imerge
 ;; Keywords: vc, tools
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.4") (magit "2.10.0"))

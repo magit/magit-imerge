@@ -39,7 +39,7 @@
 ;; `magit-imerge-popup', which by default is bound to "i" in the main
 ;; merge popup.
 ;;
-;; Once a incremental merge has been started with one of the commands
+;; Once an incremental merge has been started with one of the commands
 ;; above, the imerge popup will display the following sequence
 ;; commands:
 ;;

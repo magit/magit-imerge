@@ -7,4 +7,4 @@ provides an overview of Magit-imerge commands.
 
 [badge-license]: https://img.shields.io/badge/license-GPL_3-green.svg
 [homepage]: https://github.com/mhagger/git-imerge
-[commentary]: https://github.com/magit/magit-imerge/blob/master/magit-imerge.el#L24
+[commentary]: https://github.com/kyleam/magit-imerge/blob/master/magit-imerge.el#L24

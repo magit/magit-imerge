@@ -219,5 +219,15 @@
     (should-not (magit-anything-unmerged-p))
     (should (equal (magit-get-current-branch) "a"))))
 
+(ert-deftest magit-imerge-finish ()
+  (magit-imerge-with-test-repository
+    (magit-git "checkout" "a")
+    (magit-imerge-merge "b")
+    (magit-imerge-tests-wait)
+    (magit-imerge-finish (list "--branch=new" "--goal=rebase"))
+    (magit-imerge-tests-wait)
+    (should (equal (magit-get-current-branch) "new"))
+    (should-not (magit-rev-verify "HEAD^2"))))
+
 (provide 'magit-imerge-tests)
 ;;; magit-imerge-tests.el ends here

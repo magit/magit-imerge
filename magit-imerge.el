@@ -105,20 +105,23 @@ If there are no existing incremental merges, return nil."
 (defvar magit-imerge--active nil)
 (defvar magit-imerge--starting-branch nil
   "Current branch at the time an incremental merge was started.")
+(defvar magit-imerge-finish-arguments)
 
 (defun magit-imerge--record-start ()
   "Set the active incremental merge.
 Any command that starts a git-imerge sequence should call this
 function."
   (setq magit-imerge--active t)
-  (setq magit-imerge--starting-branch (magit-get-current-branch)))
+  (setq magit-imerge--starting-branch (magit-get-current-branch))
+  (setq magit-imerge-finish-arguments nil))
 
 (defun magit-imerge--record-stop ()
   "Stop the active incremental merge.
 Any command that stops a git-imerge sequence should call this
 function."
   (setq magit-imerge--active nil)
-  (setq magit-imerge--starting-branch nil))
+  (setq magit-imerge--starting-branch nil)
+  (setq magit-imerge-finish-arguments nil))
 
 (defun magit-imerge-in-progress-p ()
   "Return non-nil if there is an active incremental merge."
@@ -222,12 +225,17 @@ It can be resumed with `magit-imerge-resume'."
     (magit-imerge--record-stop)
     (magit-refresh)))
 
-(defun magit-imerge-finish ()
+(defun magit-imerge-set-finish-arguments (args)
+  "Store ARGS for the next `git imerge finish' call."
+  (interactive (list (magit-imerge-finish-arguments)))
+  (setq magit-imerge-finish-arguments args))
+
+(defun magit-imerge-finish (&optional args)
   "Finish the current incremental merge.
-$ git imerge finish"
-  (interactive)
+$ git imerge finish [ARGS]"
+  (interactive (list magit-imerge-finish-arguments))
   (magit-imerge--assert-in-progress)
-  (magit-run-git-with-editor "imerge" "finish")
+  (magit-run-git-with-editor "imerge" "finish" args)
   (magit-imerge--record-stop))
 
 (defun magit-imerge-abort ()
@@ -295,6 +303,13 @@ plan to return to this incremental merge later."
     (?d "[d]rop" "drop")
     (?v "re[v]ert" "revert")))
 
+(magit-define-popup magit-imerge-finish-popup
+  "Popup console for git-imerge finish."
+  'magit-popups
+  :options '((?b "Name of the result" "--branch=")
+             (?g "Goal" "--goal=" magit-imerge-read-goal))
+  :actions '((?s "Set finish arguments" magit-imerge-set-finish-arguments)))
+
 (magit-define-popup magit-imerge-popup
   "Popup console for git-imerge."
   'magit-popups
@@ -313,6 +328,7 @@ plan to return to this incremental merge later."
   :sequence-actions '((?i "Continue" magit-imerge-continue)
                       (?s "Suspend" magit-imerge-suspend)
                       (?f "Finish" magit-imerge-finish)
+                      (?F "Set finish options" magit-imerge-finish-popup)
                       (?a "Abort" magit-imerge-abort))
   :sequence-predicate 'magit-imerge-in-progress-p
   :max-action-columns 4)

@@ -316,14 +316,14 @@ plan to return to this incremental merge later."
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge")
         (magit-insert-section (imerge-info)
-          (insert (format "Name: %s\n" name))
+          (insert (format "Name:   %s\n" name))
           (magit-insert-heading)
-          (insert "Tips: ")
+          (insert "Tips:   ")
           (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
           (insert ", ")
           (magit-imerge--insert-tip (cdr (assq 'tip2 state)))
           (insert ?\n)
-          (insert (format "Goal: %s\n"
+          (insert (format "Goal:   %s\n"
                           (or (--when-let (funcall finish-value "--goal")
                                 (propertize
                                  it 'face 'magit-imerge-overriding-value))

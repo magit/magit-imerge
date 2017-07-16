@@ -318,21 +318,21 @@ plan to return to this incremental merge later."
         (magit-insert-section (imerge-info)
           (insert (format "Name:   %s\n" name))
           (magit-insert-heading)
-          (insert "Tips:   ")
-          (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
-          (insert ", ")
-          (magit-imerge--insert-tip (cdr (assq 'tip2 state)))
-          (insert ?\n)
           (insert (format "Goal:   %s\n"
                           (or (--when-let (funcall finish-value "--goal")
                                 (propertize
                                  it 'face 'magit-imerge-overriding-value))
                               (cdr (assq 'goal state)))))
-          (insert (format "Result: %s\n\n"
+          (insert (format "Result: %s\n"
                           (or (--when-let (funcall finish-value "--branch")
                                 (propertize
                                  it 'face 'magit-imerge-overriding-value))
-                              (cdr (assq 'branch state))))))
+                              (cdr (assq 'branch state)))))
+          (insert "Tips:   ")
+          (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
+          (insert ", ")
+          (magit-imerge--insert-tip (cdr (assq 'tip2 state)))
+          (insert ?\n ?\n))
         (magit-insert-section (imerge-diagram)
           (magit-insert-heading
             (propertize "Diagram\n"

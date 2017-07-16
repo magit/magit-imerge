@@ -77,9 +77,9 @@
 
 (defun magit-imerge-names ()
   "List all the incremental merges in the current repository."
-  (--map (and (string-match "\\`refs/imerge/\\(.+\\)/state\\'" it)
-              (match-string 1 it))
-         (magit-list-refs "refs/imerge/*/state")))
+  (delq nil (--map (and (string-match "\\`refs/imerge/\\(.+\\)/state\\'" it)
+                        (match-string 1 it))
+                   (magit-list-refs "refs/imerge/"))))
 
 (defun magit-imerge-state (name)
   "Return the state of incremental merge NAME."

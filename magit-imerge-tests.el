@@ -85,8 +85,8 @@
     (magit-git "imerge" "finish")
     (should (equal (magit-imerge-names) (list "a")))
     (magit-git "checkout" "a")
-    (magit-git "imerge" "merge" "--name=ctoa" "c")
-    (should (equal (magit-imerge-names) (list "a" "ctoa")))))
+    (magit-git "imerge" "merge" "--name=foo/ctoa" "c")
+    (should (equal (magit-imerge-names) (list "a" "foo/ctoa")))))
 
 (ert-deftest magit-imerge-state ()
   (magit-imerge-with-test-repository

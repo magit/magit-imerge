@@ -316,7 +316,7 @@ plan to return to this incremental merge later."
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge")
         (magit-insert-section (imerge-info)
-          (insert (format "Merge name: %s\n" name))
+          (insert (format "Name: %s\n" name))
           (magit-insert-heading)
           (insert "Tips: ")
           (magit-imerge--insert-tip (cdr (assq 'tip1 state)))

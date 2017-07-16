@@ -328,7 +328,7 @@ plan to return to this incremental merge later."
                                 (propertize
                                  it 'face 'magit-imerge-overriding-value))
                               (cdr (assq 'goal state)))))
-          (insert (format "Final branch: %s\n\n"
+          (insert (format "Result: %s\n\n"
                           (or (--when-let (funcall finish-value "--branch")
                                 (propertize
                                  it 'face 'magit-imerge-overriding-value))

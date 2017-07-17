@@ -295,7 +295,7 @@ plan to return to this incremental merge later."
                     (match-string 1 it))
                magit-imerge-finish-arguments))))
       (magit-insert-section (imerge)
-        (magit-insert-heading "Incremental merge:")
+        (magit-insert-heading "Incremental merge")
         (insert (format "Merge name: %s\n" name))
         (insert (format "Tips: %s, %s\n"
                         (cdr (assq 'tip1 state))

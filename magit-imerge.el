@@ -280,6 +280,25 @@ plan to return to this incremental merge later."
       (user-error "Cannot continue with unstaged changes")
     (magit-run-git "imerge" "continue" "--no-edit")))
 
+(defun magit-imerge--insert-tip (tip)
+  ;; The order of these checks follows the same tag > local branch >
+  ;; remote branch precedence that git-imerge gives unqualified
+  ;; ambiguous revs.
+  (cond ((magit-tag-p tip)
+         (magit-insert-section (tag tip)
+           (insert (propertize tip 'face 'magit-tag))))
+        ((magit-local-branch-p tip)
+         (magit-insert-section (branch tip)
+           (insert (propertize tip 'face 'magit-branch-local))))
+        ((magit-remote-branch-p tip)
+         (magit-insert-section (branch tip)
+           (insert (propertize tip 'face 'magit-branch-remote))))
+        (t
+         (--if-let (magit-rev-verify-commit tip)
+             (magit-insert-section (commit it)
+               (insert (propertize tip 'face 'magit-hash)))
+           (error "Tip doesn't name a commit")))))
+
 (defun magit-imerge-insert-status ()
   "Insert information about current incremental merge."
   (when (magit-imerge-in-progress-p)
@@ -295,27 +314,35 @@ plan to return to this incremental merge later."
                     (match-string 1 it))
                magit-imerge-finish-arguments))))
       (magit-insert-section (imerge)
-        (magit-insert-heading "Incremental merge:")
-        (insert (format "Merge name: %s\n" name))
-        (insert (format "Tips: %s, %s\n"
-                        (cdr (assq 'tip1 state))
-                        (cdr (assq 'tip2 state))))
-        (insert (format "Goal: %s\n"
-                        (or (--when-let (funcall finish-value "--goal")
-                              (propertize
-                               it 'face 'magit-imerge-overriding-value))
-                            (cdr (assq 'goal state)))))
-        (insert (format "Final branch: %s\n\n"
-                        (or (--when-let (funcall finish-value "--branch")
-                              (propertize
-                               it 'face 'magit-imerge-overriding-value))
-                            (cdr (assq 'branch state)))))
-        (insert
-         (with-temp-buffer
-           (magit-git-insert "imerge" "diagram" "--no-color" "--commits")
-           (re-search-backward "^Key:")
-           (delete-region (point) (point-max))
-           (buffer-string)))))))
+        (magit-insert-heading "Incremental merge")
+        (magit-insert-section (imerge-info)
+          (insert (format "Name:   %s\n" name))
+          (magit-insert-heading)
+          (insert (format "Goal:   %s\n"
+                          (or (--when-let (funcall finish-value "--goal")
+                                (propertize
+                                 it 'face 'magit-imerge-overriding-value))
+                              (cdr (assq 'goal state)))))
+          (insert (format "Result: %s\n"
+                          (or (--when-let (funcall finish-value "--branch")
+                                (propertize
+                                 it 'face 'magit-imerge-overriding-value))
+                              (cdr (assq 'branch state)))))
+          (insert "Tips:   ")
+          (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
+          (insert ", ")
+          (magit-imerge--insert-tip (cdr (assq 'tip2 state)))
+          (insert ?\n ?\n))
+        (magit-insert-section (imerge-diagram)
+          (magit-insert-heading
+            (propertize "Diagram\n"
+                        'face 'magit-section-secondary-heading))
+          (insert
+           (with-temp-buffer
+             (magit-git-insert "imerge" "diagram" "--no-color" "--commits")
+             (re-search-backward "^Key:")
+             (delete-region (point) (point-max))
+             (buffer-string))))))))
 
 (add-hook 'magit-status-sections-hook #'magit-imerge-insert-status t)
 

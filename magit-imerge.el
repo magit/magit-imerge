@@ -280,6 +280,25 @@ plan to return to this incremental merge later."
       (user-error "Cannot continue with unstaged changes")
     (magit-run-git "imerge" "continue" "--no-edit")))
 
+(defun magit-imerge--insert-tip (tip)
+  ;; The order of these checks follows the same tag > local branch >
+  ;; remote branch precedence that git-imerge gives unqualified
+  ;; ambiguous revs.
+  (cond ((magit-tag-p tip)
+         (magit-insert-section (tag tip)
+           (insert (propertize tip 'face 'magit-tag))))
+        ((magit-local-branch-p tip)
+         (magit-insert-section (branch tip)
+           (insert (propertize tip 'face 'magit-branch-local))))
+        ((magit-remote-branch-p tip)
+         (magit-insert-section (branch tip)
+           (insert (propertize tip 'face 'magit-branch-remote))))
+        (t
+         (--if-let (magit-rev-verify-commit tip)
+             (magit-insert-section (commit it)
+               (insert (propertize tip 'face 'magit-hash)))
+           (error "Tip doesn't name a commit")))))
+
 (defun magit-imerge-insert-status ()
   "Insert information about current incremental merge."
   (when (magit-imerge-in-progress-p)
@@ -299,9 +318,11 @@ plan to return to this incremental merge later."
         (magit-insert-section (imerge-info)
           (insert (format "Merge name: %s\n" name))
           (magit-insert-heading)
-          (insert (format "Tips: %s, %s\n"
-                          (cdr (assq 'tip1 state))
-                          (cdr (assq 'tip2 state))))
+          (insert "Tips: ")
+          (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
+          (insert ", ")
+          (magit-imerge--insert-tip (cdr (assq 'tip2 state)))
+          (insert ?\n)
           (insert (format "Goal: %s\n"
                           (or (--when-let (funcall finish-value "--goal")
                                 (propertize

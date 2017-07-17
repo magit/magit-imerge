@@ -296,26 +296,32 @@ plan to return to this incremental merge later."
                magit-imerge-finish-arguments))))
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge")
-        (insert (format "Merge name: %s\n" name))
-        (insert (format "Tips: %s, %s\n"
-                        (cdr (assq 'tip1 state))
-                        (cdr (assq 'tip2 state))))
-        (insert (format "Goal: %s\n"
-                        (or (--when-let (funcall finish-value "--goal")
-                              (propertize
-                               it 'face 'magit-imerge-overriding-value))
-                            (cdr (assq 'goal state)))))
-        (insert (format "Final branch: %s\n\n"
-                        (or (--when-let (funcall finish-value "--branch")
-                              (propertize
-                               it 'face 'magit-imerge-overriding-value))
-                            (cdr (assq 'branch state)))))
-        (insert
-         (with-temp-buffer
-           (magit-git-insert "imerge" "diagram" "--no-color" "--commits")
-           (re-search-backward "^Key:")
-           (delete-region (point) (point-max))
-           (buffer-string)))))))
+        (magit-insert-section (imerge-info)
+          (insert (format "Merge name: %s\n" name))
+          (magit-insert-heading)
+          (insert (format "Tips: %s, %s\n"
+                          (cdr (assq 'tip1 state))
+                          (cdr (assq 'tip2 state))))
+          (insert (format "Goal: %s\n"
+                          (or (--when-let (funcall finish-value "--goal")
+                                (propertize
+                                 it 'face 'magit-imerge-overriding-value))
+                              (cdr (assq 'goal state)))))
+          (insert (format "Final branch: %s\n\n"
+                          (or (--when-let (funcall finish-value "--branch")
+                                (propertize
+                                 it 'face 'magit-imerge-overriding-value))
+                              (cdr (assq 'branch state))))))
+        (magit-insert-section (imerge-diagram)
+          (magit-insert-heading
+            (propertize "Diagram\n"
+                        'face 'magit-section-secondary-heading))
+          (insert
+           (with-temp-buffer
+             (magit-git-insert "imerge" "diagram" "--no-color" "--commits")
+             (re-search-backward "^Key:")
+             (delete-region (point) (point-max))
+             (buffer-string))))))))
 
 (add-hook 'magit-status-sections-hook #'magit-imerge-insert-status t)
 

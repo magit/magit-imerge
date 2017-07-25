@@ -1,4 +1,5 @@
 [![License GPL 3][badge-license]](http://www.gnu.org/licenses/gpl-3.0.txt)
+[![MELPA](https://melpa.org/packages/magit-imerge-badge.svg)](https://melpa.org/#/magit-imerge)
 
 Magit-imerge is a Magit interface to git-imerge, a Git extension for
 performing incremental merges.  See git-imerge's [homepage] for more

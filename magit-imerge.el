@@ -52,7 +52,12 @@
 ;; to them at a later time.  Calling `magit-imerge-suspend' will
 ;; suspend the current incremental merge.  You can resume it later
 ;; using `magit-imerge-resume'.
-
+;;
+;; When Magit-imerge is installed from MELPA, no additional setup is
+;; needed beyond installing git-imerge.  The imerge popup will be
+;; added under the Magit merge popup, and Magit-imerge will be loaded
+;; the first time that the imerge popup is invoked.
+;;
 ;; [*] https://github.com/mhagger/git-imerge
 
 ;;; Code:

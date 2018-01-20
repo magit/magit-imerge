@@ -1,6 +1,6 @@
 ;;; magit-imerge-tests.el --- tests for Magit
 
-;; Copyright (C) 2017  Kyle Meyer
+;; Copyright (C) 2017-2018  Kyle Meyer
 ;;
 ;; License: GPLv3
 

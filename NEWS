@@ -1,0 +1,7 @@
+Magit-tbdiff NEWS -- history of user-visible changes   -*- mode: org; -*-
+
+* 0.3.0 (unreleased)
+
+- The default binding for ~magit-imerge-popup~ within the merge popup
+  has been changed from 'i' to 'I' to resolve a conflict with Magit's
+  ~magit-merge-into~ (introduced in v2.12).

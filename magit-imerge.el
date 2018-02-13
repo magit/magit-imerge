@@ -398,9 +398,9 @@ plan to return to this incremental merge later."
 (eval-after-load 'magit
   '(progn
      (magit-define-popup-action 'magit-merge-popup
-       ?i "Incremental merge" 'magit-imerge-popup)
+       ?I "Incremental merge" 'magit-imerge-popup)
      (magit-define-popup-sequence-action 'magit-merge-popup
-       ?i "Incremental merge" 'magit-imerge-popup)))
+       ?I "Incremental merge" 'magit-imerge-popup)))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

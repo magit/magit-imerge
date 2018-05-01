@@ -36,7 +36,7 @@
 ;;   * git-imerge drop   => magit-imerge-drop
 ;;
 ;; All these commands are available under the popup
-;; `magit-imerge-popup', which by default is bound to "i" in the main
+;; `magit-imerge-popup', which by default is bound to "I" in the main
 ;; merge popup.
 ;;
 ;; Once an incremental merge has been started with one of the commands

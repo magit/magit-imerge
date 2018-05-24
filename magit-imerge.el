@@ -283,7 +283,7 @@ plan to return to this incremental merge later."
   (magit-imerge--assert-in-progress)
   (if (magit-anything-unstaged-p t)
       (user-error "Cannot continue with unstaged changes")
-    (magit-run-git "imerge" "continue" "--no-edit")))
+    (magit-run-git-async "imerge" "continue" "--no-edit")))
 
 (defun magit-imerge--insert-tip (tip)
   ;; The order of these checks follows the same tag > local branch >

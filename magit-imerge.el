@@ -36,8 +36,9 @@
 ;;   * git-imerge drop   => magit-imerge-drop
 ;;
 ;; All these commands are available under the popup
-;; `magit-imerge-popup', which by default is bound to "I" in the main
-;; merge popup.
+;; `magit-imerge-popup', which is bound to "i".  Note that this
+;; overrides the default binding for `magit-gitignore', but this
+;; command is also available under `magit-gitignore-popup' ("I").
 ;;
 ;; Once an incremental merge has been started with one of the commands
 ;; above, the imerge popup will display the following sequence
@@ -397,10 +398,9 @@ plan to return to this incremental merge later."
 ;;;###autoload
 (eval-after-load 'magit
   '(progn
-     (magit-define-popup-action 'magit-merge-popup
-       ?I "Incremental merge" 'magit-imerge-popup)
-     (magit-define-popup-sequence-action 'magit-merge-popup
-       ?I "Incremental merge" 'magit-imerge-popup)))
+     (define-key magit-mode-map "i" 'magit-imerge-popup)
+     (magit-define-popup-action 'magit-dispatch-popup
+       ?i "Incremental merging" 'magit-imerge-popup ?F)))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

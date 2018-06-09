@@ -1,5 +1,13 @@
 Magit-imerge NEWS -- history of user-visible changes   -*- mode: org; -*-
 
+* master (unreleased)
+
+- The binding for ~magit-imerge-popup~ has been changed from 'I'
+  within the merge popup to 'i' within ~magit-mode-map~.  This
+  overrides the default binding for ~magit-gitignore~, which is also
+  available from the ~magit-gitignore-popup~ ('I') as of Magit
+  v2.90.0.
+
 * 0.3.0
 
 - The default binding for ~magit-imerge-popup~ within the merge popup

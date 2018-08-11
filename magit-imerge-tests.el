@@ -1,4 +1,4 @@
-;;; magit-imerge-tests.el --- tests for Magit
+;;; magit-imerge-tests.el --- tests for Magit-imerge
 
 ;; Copyright (C) 2017-2018  Kyle Meyer
 ;;

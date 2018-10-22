@@ -65,6 +65,7 @@
 
 (require 'dash)
 (require 'magit)
+(require 'magit-popup)
 (require 'json)
 
 ;;; Options

@@ -399,9 +399,11 @@ plan to return to this incremental merge later."
 ;;;###autoload
 (eval-after-load 'magit
   '(progn
+     (require 'magit-popup)
      (define-key magit-mode-map "i" 'magit-imerge-popup)
-     (magit-define-popup-action 'magit-dispatch-popup
-       ?i "Incremental merging" 'magit-imerge-popup ?F)))
+     (when (boundp 'magit-dispatch-popup)
+       (magit-define-popup-action 'magit-dispatch-popup
+         ?i "Incremental merging" 'magit-imerge-popup ?F))))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

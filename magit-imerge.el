@@ -400,7 +400,8 @@ plan to return to this incremental merge later."
 (eval-after-load 'magit
   '(progn
      (require 'magit-popup)
-     (define-key magit-mode-map "i" 'magit-imerge-popup)
+     (unless (featurep 'jkl)
+       (define-key magit-mode-map "i" 'magit-imerge-popup))
      (when (boundp 'magit-dispatch-popup)
        (magit-define-popup-action 'magit-dispatch-popup
          ?i "Incremental merging" 'magit-imerge-popup ?F))))

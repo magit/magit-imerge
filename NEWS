@@ -1,6 +1,6 @@
 Magit-imerge NEWS -- history of user-visible changes   -*- mode: org; -*-
 
-* master (unreleased)
+* 1.0.0
 
 - The binding for ~magit-imerge-popup~ has been changed from 'I'
   within the merge popup to 'i' within ~magit-mode-map~.  With the

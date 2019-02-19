@@ -65,7 +65,7 @@
 
 (require 'dash)
 (require 'magit)
-(require 'magit-popup)
+(require 'transient)
 (require 'json)
 
 ;;; Options
@@ -158,6 +158,9 @@ function."
 
 ;;; Commands
 
+(defun magit-imerge-arguments ()
+  (transient-args 'magit-imerge))
+
 ;;;###autoload
 (defun magit-imerge-merge (branch &optional args)
   "Incrementally merge BRANCH into the current branch.
@@ -244,9 +247,12 @@ It can be resumed with `magit-imerge-resume'."
     (magit-imerge--record-stop)
     (magit-refresh)))
 
+(defun magit-imerge-finish-options-arguments ()
+  (transient-args 'magit-imerge-finish-options))
+
 (defun magit-imerge-set-finish-arguments (args)
   "Store ARGS for the next `git imerge finish' call."
-  (interactive (list (magit-imerge-finish-arguments)))
+  (interactive (list (magit-imerge-finish-options-arguments)))
   (setq magit-imerge-finish-arguments args)
   (magit-refresh))
 
@@ -354,7 +360,7 @@ plan to return to this incremental merge later."
 
 (add-hook 'magit-status-sections-hook #'magit-imerge-insert-status t)
 
-;;; Popup
+;;; Transients
 
 (defun magit-imerge-read-goal (&rest _ignored)
   "Read a value for git-imerge's `--goal' option."
@@ -366,46 +372,49 @@ plan to return to this incremental merge later."
     (?d "[d]rop" "drop")
     (?v "re[v]ert" "revert")))
 
-(magit-define-popup magit-imerge-finish-popup
-  "Popup console for git-imerge finish."
-  'magit-popups
-  :options '((?b "Name of the result" "--branch=")
-             (?g "Goal" "--goal=" magit-imerge-read-goal))
-  :actions '((?s "Set finish arguments" magit-imerge-set-finish-arguments)))
+(define-transient-command magit-imerge-finish-options ()
+  "Set options for git-imerge finish."
+  ["Arguments"
+   ("-b" "Name of the result" "--branch=")
+   ("-g" "Goal" "--goal=" magit-imerge-read-goal)]
+  [("s" "Set finish arguments" magit-imerge-set-finish-arguments)])
 
-;;;###autoload (autoload 'magit-imerge-popup "magit-imerge" nil t)
-(magit-define-popup magit-imerge-popup
-  "Popup console for git-imerge."
-  'magit-popups
-  :switches '("Switches for merge, rebase, revert, and drop"
-              (?m "Manually merge all" "--manual")
-              "Switches for revert and drop"
-              (?f "Limit to first parents" "--first-parent"))
-  :options '((?b "Name of the result" "--branch=")
-             (?g "Goal" "--goal=" magit-imerge-read-goal)
-             (?n "Name of the imerge" "--name="))
-  :actions '((?i "Merge" magit-imerge-merge)
-             (?r "Rebase" magit-imerge-rebase)
-             (?v "Revert" magit-imerge-revert)
-             (?d "Drop" magit-imerge-drop)
-             (?R "Resume" magit-imerge-resume))
-  :sequence-actions '((?i "Continue" magit-imerge-continue)
-                      (?s "Suspend" magit-imerge-suspend)
-                      (?f "Finish" magit-imerge-finish)
-                      (?F "Set finish options" magit-imerge-finish-popup)
-                      (?a "Abort" magit-imerge-abort))
-  :sequence-predicate 'magit-imerge-in-progress-p
-  :max-action-columns 4)
+;;;###autoload (autoload 'magit-imerge "magit-imerge" nil t)
+(define-transient-command magit-imerge ()
+  "Perform incremental merge."
+  ["Arguments for revert and drop"
+   :if-not magit-imerge-in-progress-p
+   ("-f" "Limit to first parents" "--first-parent")]
+  ["Arguments for merge and rebase"
+   :if-not magit-imerge-in-progress-p
+   ("-g" "Goal" "--goal=" magit-imerge-read-goal)]
+  ["Arguments for merge, rebase, revert, and drop"
+   :if-not magit-imerge-in-progress-p
+   ("-m" "Manually merge all" "--manual")
+   ("-b" "Name of the result" "--branch=")
+   ("-n" "Name of the imerge" "--name=")]
+  ["Actions"
+   :if-not magit-imerge-in-progress-p
+   [("i" "Merge" magit-imerge-merge)
+    ("r" "Rebase" magit-imerge-rebase)
+    ("v" "Revert" magit-imerge-revert)
+    ("d" "Drop" magit-imerge-drop) ]
+   [("R" "Resume" magit-imerge-resume)]]
+  ["Actions"
+   :if magit-imerge-in-progress-p
+   [("i" "Continue" magit-imerge-continue)
+    ("s" "Suspend" magit-imerge-suspend) ]
+   [("f" "Finish" magit-imerge-finish)
+    ("F" "Set finish options" magit-imerge-finish-options)]
+   [("a" "Abort" magit-imerge-abort)]])
 
 ;;;###autoload
 (eval-after-load 'magit
   '(progn
-     (require 'magit-popup)
      (unless (featurep 'jkl)
-       (define-key magit-mode-map "i" 'magit-imerge-popup))
-     (when (boundp 'magit-dispatch-popup)
-       (magit-define-popup-action 'magit-dispatch-popup
-         ?i "Incremental merging" 'magit-imerge-popup ?F))))
+       (define-key magit-mode-map "i" 'magit-imerge))
+     (transient-append-suffix 'magit-dispatch "F"
+       '("i" "Incremental merging" magit-imerge))))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

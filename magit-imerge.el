@@ -124,7 +124,8 @@ If there are no existing incremental merges, return nil."
 (defvar magit-imerge--active nil)
 (defvar magit-imerge--starting-branch nil
   "Current branch at the time an incremental merge was started.")
-(defvar magit-imerge-finish-arguments)
+(defvar magit-imerge--arguments nil
+  "Arguments for the current merge.")
 
 (defun magit-imerge--record-start ()
   "Set the active incremental merge.
@@ -132,7 +133,7 @@ Any command that starts a git-imerge sequence should call this
 function."
   (setq magit-imerge--active t)
   (setq magit-imerge--starting-branch (magit-get-current-branch))
-  (setq magit-imerge-finish-arguments nil))
+  (setq magit-imerge--arguments nil))
 
 (defun magit-imerge--record-stop ()
   "Stop the active incremental merge.
@@ -140,7 +141,7 @@ Any command that stops a git-imerge sequence should call this
 function."
   (setq magit-imerge--active nil)
   (setq magit-imerge--starting-branch nil)
-  (setq magit-imerge-finish-arguments nil))
+  (setq magit-imerge--arguments nil))
 
 (defun magit-imerge-in-progress-p ()
   "Return non-nil if there is an active incremental merge."
@@ -247,19 +248,16 @@ It can be resumed with `magit-imerge-resume'."
     (magit-imerge--record-stop)
     (magit-refresh)))
 
-(defun magit-imerge-finish-options-arguments ()
-  (transient-args 'magit-imerge-finish-options))
-
-(defun magit-imerge-set-finish-arguments (args)
+(defun magit-imerge-change-finish-arguments (args)
   "Store ARGS for the next `git imerge finish' call."
-  (interactive (list (magit-imerge-finish-options-arguments)))
-  (setq magit-imerge-finish-arguments args)
+  (interactive (list (magit-imerge-arguments)))
+  (setq magit-imerge--arguments args)
   (magit-refresh))
 
 (defun magit-imerge-finish (&optional args)
   "Finish the current incremental merge.
 $ git imerge finish [ARGS]"
-  (interactive (list magit-imerge-finish-arguments))
+  (interactive (list (magit-imerge-arguments)))
   (magit-imerge--assert-in-progress)
   (magit-run-git-with-editor "imerge" "finish" args)
   (magit-imerge--record-stop))
@@ -372,27 +370,38 @@ plan to return to this incremental merge later."
     (?d "[d]rop" "drop")
     (?v "re[v]ert" "revert")))
 
-(define-transient-command magit-imerge-finish-options ()
-  "Set options for git-imerge finish."
-  ["Arguments"
-   ("-b" "Name of the result" "--branch=")
-   ("-g" "Goal" "--goal=" magit-imerge-read-goal)]
-  [("s" "Set finish arguments" magit-imerge-set-finish-arguments)])
+(define-infix-argument magit-imerge:--branch ()
+  :description "Name of the result"
+  :class 'transient-option
+  :key "-b"
+  :argument "--branch=")
+
+(define-infix-argument magit-imerge:--goal ()
+  :description "Goal"
+  :class 'transient-option
+  :key "-g"
+  :argument "--goal="
+  :reader 'magit-imerge-read-goal)
 
 ;;;###autoload (autoload 'magit-imerge "magit-imerge" nil t)
 (define-transient-command magit-imerge ()
   "Perform incremental merge."
+  :value (lambda () magit-imerge--arguments)
   ["Arguments for revert and drop"
    :if-not magit-imerge-in-progress-p
    ("-f" "Limit to first parents" "--first-parent")]
   ["Arguments for merge and rebase"
    :if-not magit-imerge-in-progress-p
-   ("-g" "Goal" "--goal=" magit-imerge-read-goal)]
+   (magit-imerge:--goal)]
   ["Arguments for merge, rebase, revert, and drop"
    :if-not magit-imerge-in-progress-p
+   (magit-imerge:--branch)
    ("-m" "Manually merge all" "--manual")
-   ("-b" "Name of the result" "--branch=")
    ("-n" "Name of the imerge" "--name=")]
+  ["Arguments for finish"
+   :if magit-imerge-in-progress-p
+   (magit-imerge:--branch)
+   (magit-imerge:--goal)]
   ["Actions"
    :if-not magit-imerge-in-progress-p
    [("i" "Merge" magit-imerge-merge)
@@ -404,8 +413,8 @@ plan to return to this incremental merge later."
    :if magit-imerge-in-progress-p
    [("i" "Continue" magit-imerge-continue)
     ("s" "Suspend" magit-imerge-suspend) ]
-   [("f" "Finish" magit-imerge-finish)
-    ("F" "Set finish options" magit-imerge-finish-options)]
+   [("c" "Change finish options" magit-imerge-change-finish-arguments)
+    ("f" "Finish" magit-imerge-finish)]
    [("a" "Abort" magit-imerge-abort)]])
 
 ;;;###autoload

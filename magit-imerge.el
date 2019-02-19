@@ -216,6 +216,11 @@ $ git imerge drop [ARGS] <range>"
 
 ;;;; Sequence commands
 
+(defun magit-imerge--arguments-from-state (name)
+  (let ((state (magit-imerge-state name)))
+    (list (format "--branch=%s" (cdr (assq 'branch state)))
+          (format "--goal=%s" (cdr (assq 'goal state))))))
+
 ;;;###autoload
 (defun magit-imerge-resume ()
   "Resume an incremental merge.
@@ -228,16 +233,20 @@ incremental merge as the active one."
         ((magit-anything-unmerged-p)
          (user-error "Cannot resume with merge conflicts")))
   (let ((names (or (magit-imerge-names)
-                   (user-error "No git-imerge refs found"))))
+                   (user-error "No git-imerge refs found")))
+        name)
     (if (= (length names) 1)
-        (message "Resuming with %s" (car names))
-      (let* ((default (magit-imerge--default-name))
-             (choice (magit-completing-read "Incremental merge name"
-                                            names nil t nil nil
-                                            default)))
-        (unless (equal choice default)
-          (magit-set choice "imerge.default"))))
-    (magit-imerge--record-start)
+        (progn
+          (setq name (car names))
+          (message "Resuming with %s" name))
+      (let* ((default (magit-imerge--default-name)))
+        (setq name (magit-completing-read "Incremental merge name"
+                                          names nil t nil nil
+                                          default))
+        (unless (equal name default)
+          (magit-set name "imerge.default"))))
+    (magit-imerge--record-start
+     (magit-imerge--arguments-from-state name))
     (magit-imerge-continue)))
 
 (defun magit-imerge-suspend ()

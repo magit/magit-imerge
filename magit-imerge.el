@@ -127,13 +127,15 @@ If there are no existing incremental merges, return nil."
 (defvar magit-imerge--arguments nil
   "Arguments for the current merge.")
 
-(defun magit-imerge--record-start ()
+(defun magit-imerge--record-start (args)
   "Set the active incremental merge.
 Any command that starts a git-imerge sequence should call this
-function."
+function.  ARGS should match the arguments the command was called
+with (interactively, the return value of
+`magit-imerge-arguments')."
   (setq magit-imerge--active t)
   (setq magit-imerge--starting-branch (magit-get-current-branch))
-  (setq magit-imerge--arguments nil))
+  (setq magit-imerge--arguments args))
 
 (defun magit-imerge--record-stop ()
   "Stop the active incremental merge.
@@ -169,7 +171,7 @@ $ git imerge merge [ARGS] BRANCH"
   (interactive
    (list (magit-read-other-branch-or-commit "Merge")
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "merge" args branch))
 
 ;;;###autoload
@@ -179,7 +181,7 @@ $ git imerge rebase [ARGS] BRANCH"
   (interactive
    (list (magit-read-other-branch-or-commit "Rebase onto")
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "rebase" args branch))
 
 ;;;###autoload
@@ -194,7 +196,7 @@ $ git imerge drop [ARGS] <range>"
    (list (or (magit-imerge--region-range)
              (magit-read-branch-or-commit "Revert commit"))
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "revert" args commit))
 
 ;;;###autoload
@@ -209,7 +211,7 @@ $ git imerge drop [ARGS] <range>"
    (list (or (magit-imerge--region-range)
              (magit-read-branch-or-commit "Drop commit"))
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "drop" args commit))
 
 ;;;; Sequence commands

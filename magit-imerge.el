@@ -55,9 +55,9 @@
 ;; using `magit-imerge-resume'.
 ;;
 ;; When Magit-imerge is installed from MELPA, no additional setup is
-;; needed beyond installing git-imerge.  The imerge popup will be
-;; added under the Magit merge popup, and Magit-imerge will be loaded
-;; the first time that the imerge popup is invoked.
+;; needed beyond installing git-imerge.  The binding for the imerge
+;; popup will be added to `magit-mode-map', and Magit-imerge will be
+;; loaded the first time that the imerge popup is invoked.
 ;;
 ;; [*] https://github.com/mhagger/git-imerge
 

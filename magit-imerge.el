@@ -35,10 +35,10 @@
 ;;   * git-imerge revert => magit-imerge-revert
 ;;   * git-imerge drop   => magit-imerge-drop
 ;;
-;; All these commands are available under the popup
-;; `magit-imerge-popup', which is bound to "i".  Note that this
-;; overrides the default binding for `magit-gitignore', but this
-;; command is also available under `magit-gitignore-popup' ("I").
+;; All these commands are available under the `magit-imerge'
+;; transient, which is bound to "i".  Note that this overrides the
+;; default binding for `magit-gitignore', but this command is also
+;; available under `magit-gitignore' ("I").
 ;;
 ;; Once an incremental merge has been started with one of the commands
 ;; above, the imerge popup will display the following sequence
@@ -57,7 +57,7 @@
 ;; When Magit-imerge is installed from MELPA, no additional setup is
 ;; needed beyond installing git-imerge.  The binding for the imerge
 ;; popup will be added to `magit-mode-map', and Magit-imerge will be
-;; loaded the first time that the imerge popup is invoked.
+;; loaded the first time that the imerge transient is invoked.
 ;;
 ;; [*] https://github.com/mhagger/git-imerge
 
@@ -65,7 +65,7 @@
 
 (require 'dash)
 (require 'magit)
-(require 'magit-popup)
+(require 'transient)
 (require 'json)
 
 ;;; Options
@@ -124,15 +124,18 @@ If there are no existing incremental merges, return nil."
 (defvar magit-imerge--active nil)
 (defvar magit-imerge--starting-branch nil
   "Current branch at the time an incremental merge was started.")
-(defvar magit-imerge-finish-arguments)
+(defvar magit-imerge--arguments nil
+  "Arguments for the current merge.")
 
-(defun magit-imerge--record-start ()
+(defun magit-imerge--record-start (args)
   "Set the active incremental merge.
 Any command that starts a git-imerge sequence should call this
-function."
+function.  ARGS should match the arguments the command was called
+with (interactively, the return value of
+`magit-imerge-arguments')."
   (setq magit-imerge--active t)
   (setq magit-imerge--starting-branch (magit-get-current-branch))
-  (setq magit-imerge-finish-arguments nil))
+  (setq magit-imerge--arguments args))
 
 (defun magit-imerge--record-stop ()
   "Stop the active incremental merge.
@@ -140,7 +143,7 @@ Any command that stops a git-imerge sequence should call this
 function."
   (setq magit-imerge--active nil)
   (setq magit-imerge--starting-branch nil)
-  (setq magit-imerge-finish-arguments nil))
+  (setq magit-imerge--arguments nil))
 
 (defun magit-imerge-in-progress-p ()
   "Return non-nil if there is an active incremental merge."
@@ -158,6 +161,9 @@ function."
 
 ;;; Commands
 
+(defun magit-imerge-arguments ()
+  (transient-args 'magit-imerge))
+
 ;;;###autoload
 (defun magit-imerge-merge (branch &optional args)
   "Incrementally merge BRANCH into the current branch.
@@ -165,7 +171,7 @@ $ git imerge merge [ARGS] BRANCH"
   (interactive
    (list (magit-read-other-branch-or-commit "Merge")
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "merge" args branch))
 
 ;;;###autoload
@@ -175,7 +181,7 @@ $ git imerge rebase [ARGS] BRANCH"
   (interactive
    (list (magit-read-other-branch-or-commit "Rebase onto")
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "rebase" args branch))
 
 ;;;###autoload
@@ -190,7 +196,7 @@ $ git imerge drop [ARGS] <range>"
    (list (or (magit-imerge--region-range)
              (magit-read-branch-or-commit "Revert commit"))
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "revert" args commit))
 
 ;;;###autoload
@@ -205,10 +211,15 @@ $ git imerge drop [ARGS] <range>"
    (list (or (magit-imerge--region-range)
              (magit-read-branch-or-commit "Drop commit"))
          (magit-imerge-arguments)))
-  (magit-imerge--record-start)
+  (magit-imerge--record-start args)
   (magit-run-git-sequencer "imerge" "drop" args commit))
 
 ;;;; Sequence commands
+
+(defun magit-imerge--arguments-from-state (name)
+  (let ((state (magit-imerge-state name)))
+    (list (format "--branch=%s" (cdr (assq 'branch state)))
+          (format "--goal=%s" (cdr (assq 'goal state))))))
 
 ;;;###autoload
 (defun magit-imerge-resume ()
@@ -222,16 +233,20 @@ incremental merge as the active one."
         ((magit-anything-unmerged-p)
          (user-error "Cannot resume with merge conflicts")))
   (let ((names (or (magit-imerge-names)
-                   (user-error "No git-imerge refs found"))))
+                   (user-error "No git-imerge refs found")))
+        name)
     (if (= (length names) 1)
-        (message "Resuming with %s" (car names))
-      (let* ((default (magit-imerge--default-name))
-             (choice (magit-completing-read "Incremental merge name"
-                                            names nil t nil nil
-                                            default)))
-        (unless (equal choice default)
-          (magit-set choice "imerge.default"))))
-    (magit-imerge--record-start)
+        (progn
+          (setq name (car names))
+          (message "Resuming with %s" name))
+      (let* ((default (magit-imerge--default-name)))
+        (setq name (magit-completing-read "Incremental merge name"
+                                          names nil t nil nil
+                                          default))
+        (unless (equal name default)
+          (magit-set name "imerge.default"))))
+    (magit-imerge--record-start
+     (magit-imerge--arguments-from-state name))
     (magit-imerge-continue)))
 
 (defun magit-imerge-suspend ()
@@ -244,16 +259,16 @@ It can be resumed with `magit-imerge-resume'."
     (magit-imerge--record-stop)
     (magit-refresh)))
 
-(defun magit-imerge-set-finish-arguments (args)
+(defun magit-imerge-change-finish-arguments (args)
   "Store ARGS for the next `git imerge finish' call."
-  (interactive (list (magit-imerge-finish-arguments)))
-  (setq magit-imerge-finish-arguments args)
+  (interactive (list (magit-imerge-arguments)))
+  (setq magit-imerge--arguments args)
   (magit-refresh))
 
 (defun magit-imerge-finish (&optional args)
   "Finish the current incremental merge.
 $ git imerge finish [ARGS]"
-  (interactive (list magit-imerge-finish-arguments))
+  (interactive (list (magit-imerge-arguments)))
   (magit-imerge--assert-in-progress)
   (magit-run-git-with-editor "imerge" "finish" args)
   (magit-imerge--record-stop))
@@ -312,29 +327,30 @@ plan to return to this incremental merge later."
     (let* ((name (or (magit-imerge-current-name)
                      (error "No name, but in progress?")))
            (state (magit-imerge-state name))
-           (finish-value
-            (lambda (option)
-              (--some
-               (and (string-match (format "\\`%s=\\(.+\\)"
-                                          (regexp-quote option))
-                                  it)
-                    (match-string 1 it))
-               magit-imerge-finish-arguments))))
+           (format-with-overriding
+            (lambda (option current)
+              (let ((val (--some
+                          (and (string-match (format "\\`%s=\\(.+\\)"
+                                                     (regexp-quote option))
+                                             it)
+                               (match-string 1 it))
+                          magit-imerge--arguments)))
+                (if (and val (not (string= val current)))
+                    (propertize val 'face 'magit-imerge-overriding-value)
+                  current)))))
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge")
         (magit-insert-section (imerge-info)
           (insert (format "Name:   %s\n" name))
           (magit-insert-heading)
           (insert (format "Goal:   %s\n"
-                          (or (--when-let (funcall finish-value "--goal")
-                                (propertize
-                                 it 'face 'magit-imerge-overriding-value))
-                              (cdr (assq 'goal state)))))
+                          (funcall format-with-overriding
+                                   "--goal"
+                                   (cdr (assq 'goal state)))))
           (insert (format "Result: %s\n"
-                          (or (--when-let (funcall finish-value "--branch")
-                                (propertize
-                                 it 'face 'magit-imerge-overriding-value))
-                              (cdr (assq 'branch state)))))
+                          (funcall format-with-overriding
+                                   "--branch"
+                                   (cdr (assq 'branch state)))))
           (insert "Tips:   ")
           (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
           (insert ", ")
@@ -353,7 +369,7 @@ plan to return to this incremental merge later."
 
 (add-hook 'magit-status-sections-hook #'magit-imerge-insert-status t)
 
-;;; Popup
+;;; Transients
 
 (defun magit-imerge-read-goal (&rest _ignored)
   "Read a value for git-imerge's `--goal' option."
@@ -365,46 +381,60 @@ plan to return to this incremental merge later."
     (?d "[d]rop" "drop")
     (?v "re[v]ert" "revert")))
 
-(magit-define-popup magit-imerge-finish-popup
-  "Popup console for git-imerge finish."
-  'magit-popups
-  :options '((?b "Name of the result" "--branch=")
-             (?g "Goal" "--goal=" magit-imerge-read-goal))
-  :actions '((?s "Set finish arguments" magit-imerge-set-finish-arguments)))
+(define-infix-argument magit-imerge:--branch ()
+  :description "Name of the result"
+  :class 'transient-option
+  :key "-b"
+  :argument "--branch=")
 
-;;;###autoload (autoload 'magit-imerge-popup "magit-imerge" nil t)
-(magit-define-popup magit-imerge-popup
-  "Popup console for git-imerge."
-  'magit-popups
-  :switches '("Switches for merge, rebase, revert, and drop"
-              (?m "Manually merge all" "--manual")
-              "Switches for revert and drop"
-              (?f "Limit to first parents" "--first-parent"))
-  :options '((?b "Name of the result" "--branch=")
-             (?g "Goal" "--goal=" magit-imerge-read-goal)
-             (?n "Name of the imerge" "--name="))
-  :actions '((?i "Merge" magit-imerge-merge)
-             (?r "Rebase" magit-imerge-rebase)
-             (?v "Revert" magit-imerge-revert)
-             (?d "Drop" magit-imerge-drop)
-             (?R "Resume" magit-imerge-resume))
-  :sequence-actions '((?i "Continue" magit-imerge-continue)
-                      (?s "Suspend" magit-imerge-suspend)
-                      (?f "Finish" magit-imerge-finish)
-                      (?F "Set finish options" magit-imerge-finish-popup)
-                      (?a "Abort" magit-imerge-abort))
-  :sequence-predicate 'magit-imerge-in-progress-p
-  :max-action-columns 4)
+(define-infix-argument magit-imerge:--goal ()
+  :description "Goal"
+  :class 'transient-option
+  :key "-g"
+  :argument "--goal="
+  :reader 'magit-imerge-read-goal)
+
+;;;###autoload (autoload 'magit-imerge "magit-imerge" nil t)
+(define-transient-command magit-imerge ()
+  "Perform incremental merge."
+  :value (lambda () magit-imerge--arguments)
+  ["Arguments for revert and drop"
+   :if-not magit-imerge-in-progress-p
+   ("-f" "Limit to first parents" "--first-parent")]
+  ["Arguments for merge and rebase"
+   :if-not magit-imerge-in-progress-p
+   (magit-imerge:--goal)]
+  ["Arguments for merge, rebase, revert, and drop"
+   :if-not magit-imerge-in-progress-p
+   (magit-imerge:--branch)
+   ("-m" "Manually merge all" "--manual")
+   ("-n" "Name of the imerge" "--name=")]
+  ["Arguments for finish"
+   :if magit-imerge-in-progress-p
+   (magit-imerge:--branch)
+   (magit-imerge:--goal)]
+  ["Actions"
+   :if-not magit-imerge-in-progress-p
+   [("i" "Merge" magit-imerge-merge)
+    ("r" "Rebase" magit-imerge-rebase)
+    ("v" "Revert" magit-imerge-revert)
+    ("d" "Drop" magit-imerge-drop) ]
+   [("R" "Resume" magit-imerge-resume)]]
+  ["Actions"
+   :if magit-imerge-in-progress-p
+   [("i" "Continue" magit-imerge-continue)
+    ("s" "Suspend" magit-imerge-suspend) ]
+   [("c" "Change finish options" magit-imerge-change-finish-arguments)
+    ("f" "Finish" magit-imerge-finish)]
+   [("a" "Abort" magit-imerge-abort)]])
 
 ;;;###autoload
 (eval-after-load 'magit
   '(progn
-     (require 'magit-popup)
      (unless (featurep 'jkl)
-       (define-key magit-mode-map "i" 'magit-imerge-popup))
-     (when (boundp 'magit-dispatch-popup)
-       (magit-define-popup-action 'magit-dispatch-popup
-         ?i "Incremental merging" 'magit-imerge-popup ?F))))
+       (define-key magit-mode-map "i" 'magit-imerge))
+     (transient-append-suffix 'magit-dispatch "F"
+       '("i" "Incremental merging" magit-imerge))))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

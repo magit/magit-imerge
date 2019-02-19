@@ -312,29 +312,30 @@ plan to return to this incremental merge later."
     (let* ((name (or (magit-imerge-current-name)
                      (error "No name, but in progress?")))
            (state (magit-imerge-state name))
-           (finish-value
-            (lambda (option)
-              (--some
-               (and (string-match (format "\\`%s=\\(.+\\)"
-                                          (regexp-quote option))
-                                  it)
-                    (match-string 1 it))
-               magit-imerge-finish-arguments))))
+           (format-with-overriding
+            (lambda (option current)
+              (let ((val (--some
+                          (and (string-match (format "\\`%s=\\(.+\\)"
+                                                     (regexp-quote option))
+                                             it)
+                               (match-string 1 it))
+                          magit-imerge--arguments)))
+                (if (and val (not (string= val current)))
+                    (propertize val 'face 'magit-imerge-overriding-value)
+                  current)))))
       (magit-insert-section (imerge)
         (magit-insert-heading "Incremental merge")
         (magit-insert-section (imerge-info)
           (insert (format "Name:   %s\n" name))
           (magit-insert-heading)
           (insert (format "Goal:   %s\n"
-                          (or (--when-let (funcall finish-value "--goal")
-                                (propertize
-                                 it 'face 'magit-imerge-overriding-value))
-                              (cdr (assq 'goal state)))))
+                          (funcall format-with-overriding
+                                   "--goal"
+                                   (cdr (assq 'goal state)))))
           (insert (format "Result: %s\n"
-                          (or (--when-let (funcall finish-value "--branch")
-                                (propertize
-                                 it 'face 'magit-imerge-overriding-value))
-                              (cdr (assq 'branch state)))))
+                          (funcall format-with-overriding
+                                   "--branch"
+                                   (cdr (assq 'branch state)))))
           (insert "Tips:   ")
           (magit-imerge--insert-tip (cdr (assq 'tip1 state)))
           (insert ", ")

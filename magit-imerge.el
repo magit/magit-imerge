@@ -295,7 +295,7 @@ plan to return to this incremental merge later."
   (magit-imerge--record-stop))
 
 (defun magit-imerge-continue ()
-  "Excecute the next step of the current incremental merge."
+  "Execute the next step of the current incremental merge."
   (interactive)
   (magit-imerge--assert-in-progress)
   (if (magit-anything-unstaged-p t)

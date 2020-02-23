@@ -3,7 +3,7 @@ Magit-imerge NEWS -- history of user-visible changes   -*- mode: org; -*-
 * master (unreleased)
 
 Magit-imerge has been updated for the latest version of Magit and now
-requires version 2.91.0 or later.
+requires version 3.0.0 or later.
 
 - To be compatible with the latest Magit, popups have been rewritten
   as transient commands.

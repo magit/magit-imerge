@@ -381,13 +381,13 @@ plan to return to this incremental merge later."
     (?d "[d]rop" "drop")
     (?v "re[v]ert" "revert")))
 
-(define-infix-argument magit-imerge:--branch ()
+(transient-define-argument magit-imerge:--branch ()
   :description "Name of the result"
   :class 'transient-option
   :key "-b"
   :argument "--branch=")
 
-(define-infix-argument magit-imerge:--goal ()
+(transient-define-argument magit-imerge:--goal ()
   :description "Goal"
   :class 'transient-option
   :key "-g"
@@ -395,7 +395,7 @@ plan to return to this incremental merge later."
   :reader 'magit-imerge-read-goal)
 
 ;;;###autoload (autoload 'magit-imerge "magit-imerge" nil t)
-(define-transient-command magit-imerge ()
+(transient-define-prefix magit-imerge ()
   "Perform incremental merge."
   :value (lambda () magit-imerge--arguments)
   ["Arguments for revert and drop"

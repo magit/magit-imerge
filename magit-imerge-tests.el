@@ -31,7 +31,7 @@
              (cl-letf (((symbol-function #'message) (lambda (&rest _))))
                (let ((default-directory ,dir)
                      (magit-list-refs-sortby nil)
-                     (inhibit-magit-refresh t))
+                     (magit-inhibit-refresh t))
                  (magit-git "init" ".")
                  (magit-git "commit" "-m" "root" "--allow-empty")
                  ;; Branch "a" .

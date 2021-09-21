@@ -36,9 +36,12 @@
 ;;   * git-imerge drop   => magit-imerge-drop
 ;;
 ;; All these commands are available under the `magit-imerge'
-;; transient, which is bound to "i".  Note that this overrides the
-;; default binding for `magit-gitignore', but this command is also
-;; available under `magit-gitignore' ("I").
+;; transient.  If you use `magit-imerge' regularly, you may want to
+;; bind it in `magit-mode-map'.  One option is to free up "i" for
+;; `magit-imerge' by moving `magit-gitignore' to another binding:
+;;
+;;    (define-key magit-mode-map (kbd "C-c C-i") 'magit-gitignore)
+;;    (define-key magit-mode-map "i" 'magit-imerge)
 ;;
 ;; Once an incremental merge has been started with one of the commands
 ;; above, the imerge popup will display the following sequence
@@ -53,11 +56,6 @@
 ;; to them at a later time.  Calling `magit-imerge-suspend' will
 ;; suspend the current incremental merge.  You can resume it later
 ;; using `magit-imerge-resume'.
-;;
-;; When Magit-imerge is installed from MELPA, no additional setup is
-;; needed beyond installing git-imerge.  The binding for the imerge
-;; popup will be added to `magit-mode-map', and Magit-imerge will be
-;; loaded the first time that the imerge transient is invoked.
 ;;
 ;; [*] https://github.com/mhagger/git-imerge
 
@@ -427,14 +425,6 @@ plan to return to this incremental merge later."
    [("c" "Change finish options" magit-imerge-change-finish-arguments)
     ("f" "Finish" magit-imerge-finish)]
    [("a" "Abort" magit-imerge-abort)]])
-
-;;;###autoload
-(eval-after-load 'magit
-  '(progn
-     (unless (featurep 'jkl)
-       (define-key magit-mode-map "i" 'magit-imerge))
-     (transient-append-suffix 'magit-dispatch "F"
-       '("i" "Incremental merging" magit-imerge))))
 
 (provide 'magit-imerge)
 ;;; magit-imerge.el ends here

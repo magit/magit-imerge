@@ -1,5 +1,20 @@
 Magit-imerge NEWS -- history of user-visible changes   -*- mode: org; -*-
 
+* master (unreleased)
+
+- Magit-imerge no longer binds ~magit-imerge~ in ~magit-mode-map~ or
+  ~magit-dispatch~, leaving it up to the user to decide if and where
+  to bind ~magit-imerge~.
+
+  For those that would like to keep ~magit-imerge~ bound to "i" in
+  ~magit-mode-map~, here's one suggestion for relocating
+  ~magit-gitignore~:
+
+  #+begin_src elisp
+  (define-key magit-mode-map (kbd "C-c C-i") 'magit-gitignore)
+  (define-key magit-mode-map "i" 'magit-imerge)
+  #+end_src
+
 * 1.1.0
 
 Magit-imerge has been updated for the latest version of Magit and now

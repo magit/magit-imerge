@@ -1,6 +1,6 @@
 Magit-imerge NEWS -- history of user-visible changes   -*- mode: org; -*-
 
-* master (unreleased)
+* 1.2.0
 
 - Magit-imerge no longer binds ~magit-imerge~ in ~magit-mode-map~ or
   ~magit-dispatch~, leaving it up to the user to decide if and where

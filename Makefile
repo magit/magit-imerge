@@ -1,13 +1,14 @@
 
 -include config.mk
 
+COMPAT_DIR ?= /dev/null
 DASH_DIR ?= /dev/null
 WITH_EDITOR_DIR ?= /dev/null
 TRANSIENT_DIR ?= /dev/null
 MAGIT_DIR ?= /dev/null
 
-LOAD_PATH = -L $(DASH_DIR) -L $(WITH_EDITOR_DIR) -L $(TRANSIENT_DIR) \
-	    -L $(MAGIT_DIR)
+LOAD_PATH = -L $(COMPAT_DIR) -L $(DASH_DIR) -L $(WITH_EDITOR_DIR) \
+	    -L $(TRANSIENT_DIR)  -L $(MAGIT_DIR)
 BATCH = emacs -Q --batch $(LOAD_PATH)
 
 all: magit-imerge.elc magit-imerge-autoloads.el

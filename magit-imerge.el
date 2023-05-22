@@ -289,7 +289,8 @@ plan to return to this incremental merge later."
   (magit-run-git "imerge" "remove")
   (when (and magit-imerge--starting-branch
              (magit-rev-verify magit-imerge--starting-branch))
-    (magit--checkout magit-imerge--starting-branch))
+    (magit--checkout magit-imerge--starting-branch)
+    (magit-refresh))
   (magit-imerge--record-stop))
 
 (defun magit-imerge-continue ()

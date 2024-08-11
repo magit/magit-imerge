@@ -1,6 +1,6 @@
 ;;; magit-imerge.el --- Magit extension for git-imerge  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017-2022  Kyle Meyer
+;; Copyright (C) 2017-2024 all Magit-imerge contributors
 
 ;; Author: Kyle Meyer <kyle@kyleam.com>
 ;; URL: https://github.com/magit/magit-imerge

@@ -42,7 +42,7 @@
 ;;
 ;;   (define-key magit-mode-map (kbd "C-c C-i") 'magit-gitignore)
 ;;   (define-key magit-mode-map "i" 'magit-imerge)
-
+;;
 ;; And, if you prefer, you can also update `magit-dispatch' to reflect
 ;; those changes:
 ;;

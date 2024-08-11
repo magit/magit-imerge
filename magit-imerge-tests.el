@@ -7,7 +7,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
 (require 'ert)
 
 (require 'magit)

@@ -61,7 +61,7 @@
 
 ;;; Code:
 
-(require 'dash)
+(require 'cl-lib)
 (require 'magit)
 (require 'transient)
 (require 'json)
@@ -82,20 +82,22 @@
 
 (defun magit-imerge-names ()
   "List all the incremental merges in the current repository."
-  (delq nil (--map (and (string-match "\\`refs/imerge/\\(.+\\)/state\\'" it)
-                        (match-string 1 it))
-                   (magit-list-refs "refs/imerge/"))))
+  (delq nil (mapcar
+             (lambda (name)
+               (and (string-match "\\`refs/imerge/\\(.+\\)/state\\'" name)
+                    (match-string 1 name)))
+             (magit-list-refs "refs/imerge/"))))
 
 (defun magit-imerge-state (name)
   "Return the state of incremental merge NAME."
-  (--when-let (magit-rev-verify (format "refs/imerge/%s/state" name))
-    (json-read-from-string (magit-git-string "cat-file" "blob" it))))
+  (when-let ((blob (magit-rev-verify (format "refs/imerge/%s/state" name))))
+    (json-read-from-string (magit-git-string "cat-file" "blob" blob))))
 
 (defun magit-imerge--default-name ()
   "Return the configured imerge name, if it exists."
-  (--when-let (magit-get "imerge.default")
-    (and (magit-rev-verify (format "refs/imerge/%s/state" it))
-         it)))
+  (when-let ((name (magit-get "imerge.default")))
+    (and (magit-rev-verify (format "refs/imerge/%s/state" name))
+         name)))
 
 (defun magit-imerge-current-name ()
   "Return the current incremental merge by name.
@@ -153,9 +155,9 @@ function."
     (user-error "No incremental merge in progress")))
 
 (defun magit-imerge--region-range ()
-  (--when-let (magit-region-values 'commit 'branch)
+  (when-let ((commits (magit-region-values 'commit 'branch)))
     (deactivate-mark)
-    (concat (car (last it)) "^.." (car it))))
+    (concat (car (last commits)) "^.." (car commits))))
 
 ;;; Commands
 
@@ -315,8 +317,8 @@ plan to return to this incremental merge later."
          (magit-insert-section (branch tip)
            (insert (propertize tip 'face 'magit-branch-remote))))
         (t
-         (--if-let (magit-rev-verify-commit tip)
-             (magit-insert-section (commit it)
+         (if-let ((commit (magit-rev-verify-commit tip)))
+             (magit-insert-section (commit commit)
                (insert (propertize tip 'face 'magit-hash)))
            (error "Tip doesn't name a commit")))))
 
@@ -328,11 +330,12 @@ plan to return to this incremental merge later."
            (state (magit-imerge-state name))
            (format-with-overriding
             (lambda (option current)
-              (let ((val (--some
-                          (and (string-match (format "\\`%s=\\(.+\\)"
-                                                     (regexp-quote option))
-                                             it)
-                               (match-string 1 it))
+              (let ((val (cl-some
+                          (lambda (arg)
+                            (and (string-match (format "\\`%s=\\(.+\\)"
+                                                       (regexp-quote option))
+                                               arg)
+                                 (match-string 1 arg)))
                           magit-imerge--arguments)))
                 (if (and val (not (string= val current)))
                     (propertize val 'face 'magit-imerge-overriding-value)

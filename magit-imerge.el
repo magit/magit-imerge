@@ -6,7 +6,7 @@
 ;; URL: https://github.com/magit/magit-imerge
 ;; Keywords: vc, tools
 ;; Version: 1.3.0
-;; Package-Requires: ((emacs "26.1") (magit "4.0.0"))
+;; Package-Requires: ((emacs "28.1") (magit "4.6.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ plan to return to this incremental merge later."
          (magit-insert-section (branch tip)
            (insert (propertize tip 'face 'magit-branch-remote))))
         (t
-         (if-let ((commit (magit-rev-verify-commit tip)))
+         (if-let ((commit (magit-commit-oid tip t)))
              (magit-insert-section (commit commit)
                (insert (propertize tip 'face 'magit-hash)))
            (error "Tip doesn't name a commit")))))

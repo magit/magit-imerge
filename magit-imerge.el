@@ -98,12 +98,12 @@
 
 (defun magit-imerge-state (name)
   "Return the state of incremental merge NAME."
-  (when-let ((blob (magit-rev-verify (format "refs/imerge/%s/state" name))))
+  (when-let* ((blob (magit-rev-verify (format "refs/imerge/%s/state" name))))
     (json-read-from-string (magit-git-string "cat-file" "blob" blob))))
 
 (defun magit-imerge--default-name ()
   "Return the configured imerge name, if it exists."
-  (when-let ((name (magit-get "imerge.default")))
+  (when-let* ((name (magit-get "imerge.default")))
     (and (magit-rev-verify (format "refs/imerge/%s/state" name))
          name)))
 
@@ -163,7 +163,7 @@ function."
     (user-error "No incremental merge in progress")))
 
 (defun magit-imerge--region-range ()
-  (when-let ((commits (magit-region-values 'commit 'branch)))
+  (when-let* ((commits (magit-region-values 'commit 'branch)))
     (deactivate-mark)
     (concat (car (last commits)) "^.." (car commits))))
 
@@ -325,7 +325,7 @@ plan to return to this incremental merge later."
          (magit-insert-section (branch tip)
            (insert (propertize tip 'face 'magit-branch-remote))))
         (t
-         (if-let ((commit (magit-rev-verify-commit tip)))
+         (if-let* ((commit (magit-rev-verify-commit tip)))
              (magit-insert-section (commit commit)
                (insert (propertize tip 'face 'magit-hash)))
            (error "Tip doesn't name a commit")))))

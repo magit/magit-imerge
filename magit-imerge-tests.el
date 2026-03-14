@@ -1,4 +1,4 @@
-;;; magit-imerge-tests.el --- tests for Magit-imerge
+;;; magit-imerge-tests.el --- tests for Magit-imerge  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017-2026 all Magit-imerge contributors
 ;;

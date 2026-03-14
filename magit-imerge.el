@@ -325,7 +325,7 @@ plan to return to this incremental merge later."
          (magit-insert-section (branch tip)
            (insert (propertize tip 'face 'magit-branch-remote))))
         (t
-         (if-let* ((commit (magit-rev-verify-commit tip)))
+         (if-let* ((commit (magit-commit-p tip)))
              (magit-insert-section (commit commit)
                (insert (propertize tip 'face 'magit-hash)))
            (error "Tip doesn't name a commit")))))
